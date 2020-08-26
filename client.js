@@ -1,25 +1,24 @@
 #!/usr/bin/gjs --include-path=.
 'use strict';
 
+imports.searchPath.unshift('.');
+
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Utils = imports.utils;
 
-const socket_host = 'localhost';
-const socket_port = 10971;
-const num_bytes = 1;
+let socket_address = Utils.new_socket_address();
 
 /**
  * Send a request to the server.
- * @param {String} request 
+ * @param {String} request
  */
 function makeRequest(request)
 {
-    // start a new client
-    let client = new Gio.SocketClient();
-    let connection;
-    
     try {
-        connection = client.connect_to_host(socket_host, socket_port, null);
+        // start a new client
+        let client = new Gio.SocketClient();
+        let connection = client.connect(socket_address, null);
         if (!connection) {
             throw "Connection failed"
         }
@@ -32,7 +31,7 @@ function makeRequest(request)
         output.write_bytes(new GLib.Bytes(''+request), null);
 
         // get the response from the input stream as a string
-        let response = String.fromCharCode.apply(null, input.read_bytes(num_bytes, null).get_data());
+        let response = String.fromCharCode.apply(null, input.read_bytes(Utils.NUM_BYTES, null).get_data());
 
         print('Requested '+request+'. received response: '+response);
 
@@ -41,7 +40,7 @@ function makeRequest(request)
         print(err);
         return false;
     }
-
+    
     return true;
 }
 
